@@ -6,18 +6,14 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-
+import CreateMod from "./pages/CreateMod";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Games from "./pages/Games";
 import Chat from "./pages/Chat";
-
-// Поки старі сторінки книг можна залишити, але для нового проєкту краще потім замінити:
-// Books -> Mods
-// BookDetails -> ModDetails
-import Books from "./pages/Books";
-import BookDetails from "./pages/BookDetails";
+import Mods from "./pages/Mods";
+import ModDetails from "./pages/ModDetails";
 
 const useAuth = () => {
   const token = localStorage.getItem("token");
@@ -51,9 +47,16 @@ const App = () => {
             </PrivateRoute>
           }
         />
-
         <Route
-          path="/games"
+          path="/mods/create"
+          element={
+            <PrivateRoute>
+              <CreateMod />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/create-mod"
           element={
             <PrivateRoute>
               <Games />
@@ -70,25 +73,31 @@ const App = () => {
           }
         />
 
-        {/* Старі маршрути з бібліотеки. Потім краще переробити на /mods */}
+
         <Route
-          path="/books"
+          path="/mods/:id"
           element={
             <PrivateRoute>
-              <Books />
+              <ModDetails />
             </PrivateRoute>
           }
         />
-
         <Route
-          path="/books/:id"
+          path="/mods"
           element={
             <PrivateRoute>
-              <BookDetails />
+              <Mods />
             </PrivateRoute>
           }
         />
-
+        <Route
+  path="/games"
+  element={
+    <PrivateRoute>
+      <Games />
+    </PrivateRoute>
+  }
+/>
         <Route path="*" element={<h2>404 – Сторінка не знайдена</h2>} />
       </Routes>
     </Router>

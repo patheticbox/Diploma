@@ -1,3 +1,4 @@
+// server/server.js
 require("dotenv").config();
 
 const express = require("express");
@@ -12,35 +13,50 @@ const aiRoutes = require("./routes/aiRoutes");
 const modRoutes = require("./routes/modRoutes");
 const gameRoutes = require("./routes/gameRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
+const userModRoutes = require("./routes/userModRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ===============================
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ===============================
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 app.use(
   cors({
-    origin: process.env.CLIENT_PORT || process.env.CLIENT_URL || "http://localhost:5173",
+    origin:
+      process.env.CLIENT_PORT ||
+      process.env.CLIENT_URL ||
+      "http://localhost:5173",
     credentials: true,
   })
 );
 
 app.use(cookieParser());
 
-// Підключення до бази даних
+// ===============================
+// Database
+// ===============================
 connectDatabase();
 
-// Статичні файли: картинки, файли модів, скріншоти
+// ===============================
+// Static uploads
+// ===============================
+// Доступ до картинок, файлів модів, скріншотів:
+// http://localhost:5000/uploads/...
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// API маршрути
+// ===============================
+// API routes
+// ===============================
 app.use("/api/auth", authRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/mods", modRoutes);
 app.use("/api/games", gameRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/user-mods", userModRoutes);
 
 // Перевірка роботи API
 app.get("/api/ping", (req, res) => {
@@ -49,17 +65,32 @@ app.get("/api/ping", (req, res) => {
   });
 });
 
-// Статика React / Vite production build
+// ВАЖЛИВО:
+// Якщо API route не знайдено — повертаємо JSON, а не React index.html.
+// Це виправляє помилку:
+// Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+app.use("/api", (req, res) => {
+  res.status(404).json({
+    message: "API route not found",
+    path: req.originalUrl,
+  });
+});
+
+// ===============================
+// React / Vite production build
+// ===============================
 const clientDistPath = path.join(__dirname, "../client/dist");
 
 app.use(express.static(clientDistPath));
 
-// Всі інші маршрути віддають React SPA
+// SPA fallback тільки для НЕ API маршрутів
 app.get("*", (req, res) => {
   res.sendFile(path.join(clientDistPath, "index.html"));
 });
 
-// Глобальний обробник помилок
+// ===============================
+// Global error handler
+// ===============================
 app.use((err, req, res, next) => {
   console.error("Global error:", err);
 
@@ -69,7 +100,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Запуск серверу
+// ===============================
+// Start server
+// ===============================
 if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => {
     console.log(`🚀 Сервер запущено на порту ${PORT}`);

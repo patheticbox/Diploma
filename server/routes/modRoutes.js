@@ -1,8 +1,106 @@
 const express = require("express");
 const router = express.Router();
-
+const { authMiddleware } = require("../middleware/auth");
 const Mod = require("../models/Mod");
+// POST /api/mods
+// Створення нового мода користувачем
+router.post("/", authMiddleware, async (req, res) => {
+  try {
+    const {
+      title,
+      titleUa,
+      game,
+      categories,
+      version,
+      gameVersion,
+      language,
+      shortDescription,
+      description,
+      tags,
+      coverImage,
+      screenshots,
+      installationGuide,
+      requirements,
+      changelog,
+      modFileUrl,
+      modFileName,
+      modFileSize,
+    } = req.body;
 
+    if (!title || !game || !description) {
+      return res.status(400).json({
+        message: "Назва, гра та опис є обов'язковими полями",
+      });
+    }
+
+    const normalizedTags = Array.isArray(tags)
+      ? tags
+      : String(tags || "")
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean);
+
+    const normalizedScreenshots = Array.isArray(screenshots)
+      ? screenshots
+      : String(screenshots || "")
+          .split("\n")
+          .map((url) => url.trim())
+          .filter(Boolean)
+          .map((url) => ({
+            url,
+            caption: "",
+          }));
+
+    const newMod = await Mod.create({
+      title,
+      titleUa: titleUa || title,
+      game,
+      categories: categories || [],
+      version: version || "1.0.0",
+      gameVersion: gameVersion || "",
+      language: language || "Українська",
+      shortDescription: shortDescription || description.slice(0, 180),
+      description,
+      tags: normalizedTags,
+      coverImage: coverImage || "",
+      screenshots: normalizedScreenshots,
+      installationGuide: installationGuide || "",
+      requirements: requirements || "",
+      changelog: changelog || "",
+      modFile: {
+        url: modFileUrl || "",
+        filename: modFileName || "",
+        size: Number(modFileSize) || 0,
+      },
+      author: req.user._id,
+      status: "published",
+      downloadCount: 0,
+      viewCount: 0,
+      likesCount: 0,
+      averageRating: 0,
+      ratingsCount: 0,
+      isFeatured: false,
+    });
+
+    const populatedMod = await Mod.findById(newMod._id)
+      .populate("game", "title titleUa slug")
+      .populate("categories", "name nameUa slug icon")
+      .populate("author", "username email")
+      .lean();
+
+    res.status(201).json({
+      message: "Мод успішно створено",
+      mod: populatedMod,
+    });
+  } catch (error) {
+    console.error("Create mod error:", error);
+
+    res.status(500).json({
+      message: "Помилка при створенні мода",
+      error: error.message,
+    });
+  }
+});
 // GET /api/mods
 router.get("/", async (req, res) => {
   try {

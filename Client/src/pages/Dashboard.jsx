@@ -1,6 +1,17 @@
-// src/pages/Dashboard.jsx
+// client/src/pages/Dashboard.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import FallbackImage from "../components/FallbackImage";
+import {
+  layout,
+  header,
+  cards,
+  typography,
+  buttons,
+  badges,
+  grids,
+  colors,
+} from "../styles/theme";
 
 export default function Dashboard() {
   const [user, setUser] = useState({ username: "Користувач" });
@@ -42,8 +53,6 @@ export default function Dashboard() {
           Authorization: `Bearer ${token}`,
         };
 
-        // Профіль користувача.
-        // Спочатку пробуємо /profile, якщо в authRoutes інший endpoint — пробуємо /me.
         let profileRes = await fetch("/api/auth/profile", {
           headers: authHeaders,
           credentials: "include",
@@ -61,7 +70,6 @@ export default function Dashboard() {
           setUser(profileData.user || profileData);
         }
 
-        // Моди
         const modsRes = await fetch("/api/mods?limit=8&sort=popular", {
           credentials: "include",
         });
@@ -71,7 +79,6 @@ export default function Dashboard() {
           setMods(modsData.mods || []);
         }
 
-        // Ігри
         const gamesRes = await fetch("/api/games", {
           credentials: "include",
         });
@@ -81,7 +88,6 @@ export default function Dashboard() {
           setGames(gamesData.games || []);
         }
 
-        // Категорії
         const categoriesRes = await fetch("/api/categories", {
           credentials: "include",
         });
@@ -91,7 +97,6 @@ export default function Dashboard() {
           setCategories(categoriesData.categories || []);
         }
 
-        // AI статус
         const aiRes = await fetch("/api/ai/ping", {
           headers: authHeaders,
           credentials: "include",
@@ -137,31 +142,38 @@ export default function Dashboard() {
     };
   }, [mods, games, categories]);
 
-  const topMods = mods.slice(0, 4);
+  const topMods = mods.slice(0, 3);
+
   const recentMods = [...mods]
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
     .slice(0, 5);
 
   return (
-    <div style={styles.body}>
-      <header style={styles.header}>
-        <Link to="/dashboard" style={styles.logo}>
-          <span style={styles.logoIcon}>🧩</span>
+    <div style={layout.page}>
+      <header style={header.header}>
+        <Link to="/dashboard" style={header.logo}>
+          <span style={header.logoIcon}>🧩</span>
           <span>ModVerse</span>
         </Link>
 
-        <nav style={styles.nav}>
-          <Link to="/dashboard" style={styles.navLink}>
-            📊 Панель
+<nav style={header.nav}>
+          <Link to="/mods/create" style={buttons.primary}>
+  Додати мод
+</Link>
+          <Link to="/dashboard" style={header.navLink}>
+            Панель
           </Link>
-          <Link to="/mods" style={styles.navLink}>
-            🧩 Моди
+
+          <Link to="/mods" style={header.navLinkActive}>
+            Моди
           </Link>
-          <Link to="/games" style={styles.navLink}>
-            🎮 Ігри
+
+          <Link to="/games" style={header.navLink}>
+            Ігри
           </Link>
-          <Link to="/chat" style={styles.navLink}>
-            🤖 AI Агент
+
+          <Link to="/chat" style={header.navLink}>
+            AI Агент
           </Link>
         </nav>
 
@@ -170,56 +182,57 @@ export default function Dashboard() {
             <div style={styles.userAvatar}>
               {user?.username?.charAt(0)?.toUpperCase() || "U"}
             </div>
+
             <span>{user?.username || "Користувач"}</span>
           </div>
 
-          <button style={styles.logoutBtn} onClick={logout}>
+          <button style={header.logoutBtn} onClick={logout}>
             Вийти
           </button>
         </div>
       </header>
 
-      <main style={styles.wrapper}>
+      <main style={layout.wrapper}>
         <section style={styles.hero}>
           <div>
-            <p style={styles.eyebrow}>Сервіс модифікацій для відеоігор</p>
+            <div style={badges.badge}>Сервіс модифікацій для відеоігор</div>
 
-            <h1 style={styles.heroTitle}>
+            <h1 style={typography.h1}>
               Вітаємо, {user?.username || "Користувач"} 👋
             </h1>
 
             <p style={styles.heroText}>
-              Тут можна переглядати моди для різних ігор, знаходити графічні,
-              геймплейні та оптимізаційні модифікації, а також отримувати
-              персональні поради від розумного AI-агента.
+              Керуйте каталогом модів, переглядайте ігри, категорії,
+              популярні модифікації та використовуйте AI-агента для підбору
+              модів під конкретну гру або стиль проходження.
             </p>
 
             <div style={styles.heroActions}>
-              <Link to="/mods" style={styles.primaryButton}>
+              <Link to="/mods" style={buttons.primary}>
                 Переглянути моди
               </Link>
 
-              <Link to="/chat" style={styles.secondaryButton}>
-                Запитати AI-агента
+              <Link to="/chat" style={buttons.secondary}>
+                Запитати AI
               </Link>
 
-              <Link to="/add-mod" style={styles.secondaryButton}>
-                Додати мод
+              <Link to="/games" style={buttons.secondary}>
+                Перейти до ігор
               </Link>
             </div>
           </div>
 
-          <div style={styles.heroCard}>
-            <div style={styles.aiBadge}>
+          <div style={styles.aiCard}>
+            <div style={styles.aiStatusRow}>
               <span
                 style={{
                   ...styles.aiDot,
                   background:
                     aiStatus === "online"
-                      ? "#22c55e"
+                      ? colors.success
                       : aiStatus === "checking"
-                      ? "#f59e0b"
-                      : "#ef4444",
+                      ? colors.warning
+                      : colors.danger,
                 }}
               />
 
@@ -232,13 +245,13 @@ export default function Dashboard() {
               </span>
             </div>
 
-            <span style={styles.heroIcon}>🤖</span>
+            <div style={styles.aiIcon}>🤖</div>
 
-            <h3 style={styles.heroCardTitle}>Розумний підбір модів</h3>
+            <h3 style={styles.aiCardTitle}>Розумний підбір модів</h3>
 
-            <p style={styles.heroCardText}>
-              AI-агент може підібрати моди за грою, жанром, категорією,
-              продуктивністю або стилем проходження.
+            <p style={styles.aiCardText}>
+              Агент аналізує запит, гру, категорію, теги та популярність модів,
+              щоб запропонувати релевантні варіанти з бази.
             </p>
           </div>
         </section>
@@ -248,65 +261,75 @@ export default function Dashboard() {
         <section style={styles.statsGrid}>
           <StatCard icon="🧩" label="Модів у каталозі" value={stats.mods} />
           <StatCard icon="🎮" label="Ігор у базі" value={stats.games} />
-          <StatCard icon="🏷" label="Категорій" value={stats.categories} />
+          <StatCard icon="🏷️" label="Категорій" value={stats.categories} />
           <StatCard icon="⬇️" label="Завантажень" value={stats.downloads} />
           <StatCard icon="❤️" label="Лайків" value={stats.likes} />
-          <StatCard icon="⭐️" label="Середній рейтинг" value={stats.rating} />
+          <StatCard icon="⭐" label="Середній рейтинг" value={stats.rating} />
         </section>
 
         <section style={styles.contentGrid}>
-          <div style={styles.panel}>
+          <div style={cards.panel}>
             <div style={styles.panelHeader}>
               <div>
-                <h2 style={styles.panelTitle}>Популярні моди</h2>
+                <h2 style={typography.h2}>Популярні моди</h2>
                 <p style={styles.panelSubtitle}>
                   Найактивніші модифікації за завантаженнями та оцінками
                 </p>
               </div>
 
               <Link to="/mods" style={styles.panelLink}>
-                Усі моди
+                Усі моди →
               </Link>
             </div>
 
             {topMods.length === 0 ? (
               <p style={styles.emptyText}>
-                Поки немає модів у базі. Додайте перші модифікації або запустіть
-                seed-скрипт.
+                Поки немає модів у базі. Додайте перші модифікації або
+                запустіть seed-скрипт.
               </p>
             ) : (
-              <div style={styles.modList}>
+              <div style={styles.modGrid}>
                 {topMods.map((mod) => (
                   <Link
                     to={`/mods/${mod._id}`}
                     key={mod._id}
-                    style={styles.modItem}
+                    style={styles.modCard}
                   >
-                    <div style={styles.modCover}>
-                      {mod.coverImage ? (
-                        <img
-                          src={mod.coverImage}
-                          alt={mod.titleUa || mod.title}
-                          style={styles.modCoverImg}
-                        />
-                      ) : (
-                        <span>🧩</span>
-                      )}
+                    <div style={styles.modImageBox}>
+                      <FallbackImage
+                        src={mod.coverImage}
+                        alt={mod.titleUa || mod.title}
+                        title={mod.titleUa || mod.title}
+                        type="mod"
+                      />
+
+                      <span style={styles.modRatingBadge}>
+                        ⭐ {mod.averageRating || 0}
+                      </span>
                     </div>
 
-                    <div style={styles.modInfo}>
+                    <div style={styles.modCardContent}>
+                      <span style={styles.modGameBadge}>
+                        🎮{" "}
+                        {mod.game?.titleUa ||
+                          mod.game?.title ||
+                          "Гра не вказана"}
+                      </span>
+
                       <h3 style={styles.modTitle}>
                         {mod.titleUa || mod.title}
                       </h3>
 
-                      <p style={styles.modMeta}>
-                        {mod.game?.titleUa || mod.game?.title || "Гра не вказана"}
+                      <p style={styles.modDescription}>
+                        {mod.shortDescription ||
+                          mod.description ||
+                          "Опис мода поки не додано."}
                       </p>
 
                       <div style={styles.modStats}>
                         <span>⬇️ {mod.downloadCount || 0}</span>
                         <span>❤️ {mod.likesCount || 0}</span>
-                        <span>⭐️ {mod.averageRating || 0}</span>
+                        <span>👁️ {mod.viewCount || 0}</span>
                       </div>
                     </div>
                   </Link>
@@ -315,10 +338,10 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div style={styles.panel}>
+          <div style={cards.panel}>
             <div style={styles.panelHeader}>
               <div>
-                <h2 style={styles.panelTitle}>Швидкі дії</h2>
+                <h2 style={typography.h2}>Швидкі дії</h2>
                 <p style={styles.panelSubtitle}>
                   Основні переходи для роботи з проєктом
                 </p>
@@ -326,46 +349,42 @@ export default function Dashboard() {
             </div>
 
             <div style={styles.quickActions}>
-              <Link to="/mods" style={styles.quickAction}>
-                <span style={styles.quickIcon}>🧩</span>
-                <div>
-                  <strong>Каталог модів</strong>
-                  <p>Переглянути всі доступні модифікації</p>
-                </div>
-              </Link>
+              <QuickAction
+                to="/mods"
+                icon="🧩"
+                title="Каталог модів"
+                text="Переглянути всі доступні модифікації"
+              />
 
-              <Link to="/chat" style={styles.quickAction}>
-                <span style={styles.quickIcon}>🤖</span>
-                <div>
-                  <strong>AI Агент</strong>
-                  <p>Попросити рекомендацію або допомогу</p>
-                </div>
-              </Link>
+              <QuickAction
+                to="/chat"
+                icon="🤖"
+                title="AI Агент"
+                text="Попросити рекомендацію або допомогу"
+              />
 
-              <Link to="/add-mod" style={styles.quickAction}>
-                <span style={styles.quickIcon}>➕</span>
-                <div>
-                  <strong>Додати мод</strong>
-                  <p>Створити нову сторінку модифікації</p>
-                </div>
-              </Link>
+              <QuickAction
+                to="/games"
+                icon="🎮"
+                title="Ігри"
+                text="Переглянути ігри, для яких є моди"
+              />
 
-              <Link to="/games" style={styles.quickAction}>
-                <span style={styles.quickIcon}>🎮</span>
-                <div>
-                  <strong>Ігри</strong>
-                  <p>Переглянути ігри, для яких є моди</p>
-                </div>
-              </Link>
+              <QuickAction
+                to="/mods"
+                icon="🔎"
+                title="Пошук модів"
+                text="Знайти моди за категорією або грою"
+              />
             </div>
           </div>
         </section>
 
-        <section style={styles.contentGrid}>
-          <div style={styles.panel}>
+        <section style={styles.bottomGrid}>
+          <div style={cards.panel}>
             <div style={styles.panelHeader}>
               <div>
-                <h2 style={styles.panelTitle}>Категорії модів</h2>
+                <h2 style={typography.h2}>Категорії модів</h2>
                 <p style={styles.panelSubtitle}>
                   Основні типи модифікацій у системі
                 </p>
@@ -375,17 +394,17 @@ export default function Dashboard() {
             {categories.length === 0 ? (
               <p style={styles.emptyText}>
                 Категорії ще не додані. Пізніше тут будуть графіка, геймплей,
-                зброя, карти, оптимізація та інші типи модів.
+                оптимізація, інтерфейс та інші типи модів.
               </p>
             ) : (
               <div style={styles.categoryGrid}>
-                {categories.slice(0, 8).map((category) => (
+                {categories.slice(0, 10).map((category) => (
                   <Link
                     to={`/mods?category=${category._id}`}
                     key={category._id}
-                    style={styles.categoryPill}
+                    style={badges.pill}
                   >
-                    <span>{category.icon || "🏷"}</span>
+                    <span>{category.icon || "🏷️"}</span>
                     <span>{category.nameUa || category.name}</span>
                   </Link>
                 ))}
@@ -393,12 +412,12 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div style={styles.panel}>
+          <div style={cards.panel}>
             <div style={styles.panelHeader}>
               <div>
-                <h2 style={styles.panelTitle}>Останні моди</h2>
+                <h2 style={typography.h2}>Останні моди</h2>
                 <p style={styles.panelSubtitle}>
-                  Нові або нещодавно додані модифікації
+                  Нещодавно додані або оновлені модифікації
                 </p>
               </div>
             </div>
@@ -413,9 +432,7 @@ export default function Dashboard() {
                     key={mod._id}
                     style={styles.activityItem}
                   >
-                    <span>
-                      🧩 {mod.titleUa || mod.title}
-                    </span>
+                    <span>🧩 {mod.titleUa || mod.title}</span>
 
                     <span style={styles.activityStatus}>
                       {mod.game?.titleUa || mod.game?.title || "Без гри"}
@@ -429,18 +446,20 @@ export default function Dashboard() {
 
         <section style={styles.aiPanel}>
           <div>
-            <p style={styles.eyebrow}>AI Агент</p>
-            <h2 style={styles.aiTitle}>
+            <p style={styles.aiPanelLabel}>AI Агент</p>
+
+            <h2 style={styles.aiPanelTitle}>
               Не знаєш, який мод встановити?
             </h2>
-            <p style={styles.aiText}>
-              Напиши щось типу: “порадь графічні моди для слабкого ПК”,
-              “дай моди для Skyrim на геймплей” або “що встановити для
-              покращення FPS”.
+
+            <p style={styles.aiPanelText}>
+              Напиши запит типу: “порадь графічні моди для Minecraft”,
+              “що встановити для слабкого ПК” або “дай моди для Skyrim на
+              геймплей”.
             </p>
           </div>
 
-          <Link to="/chat" style={styles.aiButton}>
+          <Link to="/chat" style={buttons.primary}>
             Відкрити чат
           </Link>
         </section>
@@ -452,74 +471,31 @@ export default function Dashboard() {
 function StatCard({ icon, label, value }) {
   return (
     <div style={styles.statCard}>
-      <span style={styles.statIcon}>{icon}</span>
+      <div style={styles.statIcon}>{icon}</div>
       <p style={styles.statLabel}>{label}</p>
       <h2 style={styles.statValue}>{value}</h2>
     </div>
   );
 }
 
+function QuickAction({ to, icon, title, text }) {
+  return (
+    <Link to={to} style={styles.quickAction}>
+      <span style={styles.quickIcon}>{icon}</span>
+
+      <div>
+        <strong>{title}</strong>
+        <p>{text}</p>
+      </div>
+    </Link>
+  );
+}
+
 const styles = {
-  body: {
-    background: "#0b0f19",
-    minHeight: "100vh",
-    color: "#f9fafb",
-    fontFamily:
-      "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-  },
-
-  header: {
-    background: "rgba(11, 15, 25, 0.92)",
-    color: "#f9fafb",
-    padding: "16px 32px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderBottom: "1px solid rgba(148, 163, 184, 0.18)",
-    position: "sticky",
-    top: 0,
-    zIndex: 20,
-    backdropFilter: "blur(16px)",
-  },
-
-  logo: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    color: "#ffffff",
-    textDecoration: "none",
-    fontSize: "20px",
-    fontWeight: "800",
-    letterSpacing: "-0.04em",
-  },
-
-  logoIcon: {
-    width: "36px",
-    height: "36px",
-    borderRadius: "12px",
-    background: "#7c3aed",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  nav: {
-    display: "flex",
-    gap: "20px",
-    alignItems: "center",
-  },
-
-  navLink: {
-    color: "#cbd5e1",
-    textDecoration: "none",
-    fontSize: "14px",
-    fontWeight: "600",
-  },
-
   headerRight: {
     display: "flex",
     alignItems: "center",
-    gap: "14px",
+    gap: "12px",
   },
 
   userInfo: {
@@ -527,77 +503,34 @@ const styles = {
     alignItems: "center",
     gap: "10px",
     fontSize: "14px",
-    fontWeight: "600",
-    color: "#e5e7eb",
+    fontWeight: "650",
+    color: colors.primaryText,
   },
 
   userAvatar: {
     width: "36px",
     height: "36px",
     borderRadius: "50%",
-    background: "#1f2937",
-    border: "1px solid rgba(148, 163, 184, 0.25)",
-    color: "#ffffff",
+    background: colors.softBg2,
+    color: colors.primaryText,
+    border: `1px solid ${colors.border}`,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontWeight: "800",
-  },
-
-  logoutBtn: {
-    padding: "8px 16px",
-    background: "rgba(248, 250, 252, 0.06)",
-    border: "1px solid rgba(148, 163, 184, 0.22)",
-    color: "#f9fafb",
-    borderRadius: "12px",
-    cursor: "pointer",
-    fontSize: "14px",
-    fontWeight: "700",
-  },
-
-  wrapper: {
-    width: "100%",
-    maxWidth: "1240px",
-    margin: "0 auto",
-    padding: "34px 24px",
+    fontWeight: "850",
   },
 
   hero: {
-    background:
-      "radial-gradient(circle at top right, rgba(124, 58, 237, 0.32), transparent 36%), #111827",
-    border: "1px solid rgba(148, 163, 184, 0.2)",
-    borderRadius: "28px",
-    padding: "34px",
+    ...cards.hero,
     display: "grid",
     gridTemplateColumns: "1fr 330px",
     gap: "26px",
-    boxShadow: "0 24px 60px rgba(0, 0, 0, 0.22)",
-    marginBottom: "24px",
-  },
-
-  eyebrow: {
-    margin: "0 0 8px 0",
-    color: "#a78bfa",
-    fontSize: "14px",
-    fontWeight: "800",
-    letterSpacing: "0.04em",
-    textTransform: "uppercase",
-  },
-
-  heroTitle: {
-    margin: "0 0 12px 0",
-    fontSize: "42px",
-    lineHeight: "1.08",
-    fontWeight: "900",
-    letterSpacing: "-0.06em",
+    marginBottom: "22px",
   },
 
   heroText: {
-    margin: 0,
-    maxWidth: "680px",
-    color: "#cbd5e1",
-    fontSize: "16px",
-    lineHeight: "1.7",
+    ...typography.text,
+    maxWidth: "760px",
   },
 
   heroActions: {
@@ -607,48 +540,27 @@ const styles = {
     flexWrap: "wrap",
   },
 
-  primaryButton: {
-    background: "#7c3aed",
-    color: "#ffffff",
-    padding: "12px 18px",
-    borderRadius: "14px",
-    textDecoration: "none",
-    fontSize: "14px",
-    fontWeight: "800",
-    boxShadow: "0 14px 30px rgba(124, 58, 237, 0.28)",
-  },
-
-  secondaryButton: {
-    background: "rgba(248, 250, 252, 0.08)",
-    color: "#f9fafb",
-    padding: "12px 18px",
-    borderRadius: "14px",
-    border: "1px solid rgba(148, 163, 184, 0.22)",
-    textDecoration: "none",
-    fontSize: "14px",
-    fontWeight: "800",
-  },
-
-  heroCard: {
-    background: "rgba(15, 23, 42, 0.82)",
-    border: "1px solid rgba(148, 163, 184, 0.2)",
-    borderRadius: "22px",
+  aiCard: {
+    background: colors.cardBg,
+    border: `1px solid ${colors.border}`,
+    borderRadius: "24px",
     padding: "22px",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
+    boxShadow: "0 14px 35px rgba(21, 128, 61, 0.06)",
   },
 
-  aiBadge: {
+  aiStatusRow: {
     display: "inline-flex",
     alignItems: "center",
     gap: "8px",
     alignSelf: "flex-start",
     padding: "7px 10px",
     borderRadius: "999px",
-    background: "rgba(15, 23, 42, 0.9)",
-    border: "1px solid rgba(148, 163, 184, 0.18)",
-    color: "#e5e7eb",
+    background: colors.softBg,
+    border: `1px solid ${colors.border}`,
+    color: colors.primaryText,
     fontSize: "12px",
     fontWeight: "800",
     marginBottom: "18px",
@@ -660,79 +572,92 @@ const styles = {
     borderRadius: "50%",
   },
 
-  heroIcon: {
-    fontSize: "42px",
+  aiIcon: {
+    width: "54px",
+    height: "54px",
+    borderRadius: "18px",
+    background: colors.softBg2,
+    color: colors.primaryText,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "28px",
     marginBottom: "14px",
   },
 
-  heroCardTitle: {
+  aiCardTitle: {
     margin: "0 0 8px 0",
     fontSize: "20px",
     fontWeight: "850",
+    color: colors.textDark,
   },
 
-  heroCardText: {
+  aiCardText: {
     margin: 0,
-    color: "#cbd5e1",
+    color: colors.textMuted,
     fontSize: "14px",
     lineHeight: "1.65",
   },
 
   errorMessage: {
-    color: "#fecaca",
-    background: "rgba(127, 29, 29, 0.4)",
-    border: "1px solid rgba(248, 113, 113, 0.32)",
+    color: "#7f1d1d",
+    background: "#fee2e2",
+    border: "1px solid #fecaca",
     borderRadius: "14px",
     padding: "12px 14px",
     marginBottom: "20px",
   },
 
   statsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-    gap: "16px",
-    marginBottom: "24px",
+    ...grids.statsGrid,
+    marginBottom: "22px",
   },
 
   statCard: {
-    background: "#111827",
-    border: "1px solid rgba(148, 163, 184, 0.18)",
-    borderRadius: "20px",
+    background: colors.cardBg,
+    border: `1px solid ${colors.border}`,
+    borderRadius: "22px",
     padding: "20px",
-    boxShadow: "0 16px 40px rgba(0, 0, 0, 0.16)",
+    boxShadow: "0 14px 35px rgba(21, 128, 61, 0.06)",
   },
 
   statIcon: {
-    fontSize: "25px",
+    width: "42px",
+    height: "42px",
+    borderRadius: "14px",
+    background: colors.softBg2,
+    border: `1px solid ${colors.border}`,
+    color: colors.primaryText,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "22px",
+    marginBottom: "12px",
   },
 
   statLabel: {
-    margin: "12px 0 6px 0",
-    color: "#94a3b8",
+    margin: "0 0 5px 0",
+    color: colors.textMuted,
     fontSize: "14px",
     fontWeight: "650",
   },
 
   statValue: {
     margin: 0,
-    fontSize: "32px",
+    fontSize: "31px",
     letterSpacing: "-0.05em",
     fontWeight: "900",
+    color: colors.textDark,
   },
 
   contentGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "18px",
-    marginBottom: "24px",
+    ...grids.contentGrid,
+    marginBottom: "18px",
   },
 
-  panel: {
-    background: "#111827",
-    border: "1px solid rgba(148, 163, 184, 0.18)",
-    borderRadius: "22px",
-    padding: "22px",
-    boxShadow: "0 16px 40px rgba(0, 0, 0, 0.16)",
+  bottomGrid: {
+    ...grids.twoColumns,
+    marginBottom: "18px",
   },
 
   panelHeader: {
@@ -743,102 +668,121 @@ const styles = {
     marginBottom: "16px",
   },
 
-  panelTitle: {
-    margin: 0,
-    fontSize: "21px",
-    fontWeight: "900",
-    letterSpacing: "-0.04em",
-  },
-
   panelSubtitle: {
     margin: "6px 0 0 0",
-    color: "#94a3b8",
+    color: colors.textMuted,
     fontSize: "13px",
     lineHeight: "1.5",
   },
 
   panelLink: {
-    color: "#a78bfa",
+    color: colors.primary,
     textDecoration: "none",
     fontSize: "14px",
     fontWeight: "800",
     whiteSpace: "nowrap",
   },
 
-  modList: {
+  modGrid: {
     display: "grid",
-    gap: "12px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: "16px",
   },
 
-  modItem: {
-    background: "rgba(15, 23, 42, 0.8)",
-    border: "1px solid rgba(148, 163, 184, 0.14)",
-    borderRadius: "16px",
-    padding: "12px",
-    display: "flex",
-    gap: "12px",
-    color: "#f9fafb",
-    textDecoration: "none",
-  },
-
-  modCover: {
-    width: "62px",
-    height: "62px",
-    flex: "0 0 62px",
-    borderRadius: "14px",
-    background: "#1f2937",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+  modCard: {
+    background: colors.softBg,
+    border: `1px solid ${colors.border}`,
+    borderRadius: "22px",
     overflow: "hidden",
-    fontSize: "25px",
+    color: colors.textDark,
+    textDecoration: "none",
+    display: "flex",
+    flexDirection: "column",
+    boxShadow: "0 12px 28px rgba(21, 128, 61, 0.05)",
   },
 
-  modCoverImg: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
+  modImageBox: {
+    height: "150px",
+    position: "relative",
+    background: colors.softBg2,
+    overflow: "hidden",
   },
 
-  modInfo: {
-    minWidth: 0,
+  modRatingBadge: {
+    position: "absolute",
+    top: "12px",
+    right: "12px",
+    background: "rgba(255, 255, 255, 0.92)",
+    color: colors.primaryText,
+    border: `1px solid ${colors.border}`,
+    borderRadius: "999px",
+    padding: "6px 9px",
+    fontSize: "12px",
+    fontWeight: "850",
+    backdropFilter: "blur(10px)",
+  },
+
+  modCardContent: {
+    padding: "15px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+    flex: 1,
+  },
+
+  modGameBadge: {
+    alignSelf: "flex-start",
+    background: colors.softBg2,
+    color: colors.primaryText,
+    border: `1px solid ${colors.border}`,
+    borderRadius: "999px",
+    padding: "6px 9px",
+    fontSize: "12px",
+    fontWeight: "800",
   },
 
   modTitle: {
-    margin: "0 0 5px 0",
-    fontSize: "15px",
-    fontWeight: "850",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
+    margin: 0,
+    fontSize: "17px",
+    fontWeight: "900",
+    letterSpacing: "-0.04em",
+    color: colors.textDark,
+    lineHeight: "1.2",
   },
 
-  modMeta: {
-    margin: "0 0 8px 0",
-    color: "#94a3b8",
+  modDescription: {
+    margin: 0,
+    color: colors.textMuted,
     fontSize: "13px",
+    lineHeight: "1.55",
+    display: "-webkit-box",
+    WebkitLineClamp: 3,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+    minHeight: "60px",
   },
 
   modStats: {
+    marginTop: "auto",
     display: "flex",
     gap: "10px",
-    color: "#cbd5e1",
+    color: colors.primaryText,
     fontSize: "12px",
-    fontWeight: "700",
+    fontWeight: "750",
     flexWrap: "wrap",
   },
 
   quickActions: {
     display: "grid",
-    gap: "12px",
+    gap: "11px",
   },
 
   quickAction: {
-    background: "rgba(15, 23, 42, 0.8)",
-    border: "1px solid rgba(148, 163, 184, 0.14)",
-    borderRadius: "16px",
+    background: colors.softBg,
+    border: `1px solid ${colors.border}`,
+    borderRadius: "18px",
     padding: "14px",
-    color: "#f9fafb",
+    color: colors.textDark,
     textDecoration: "none",
     display: "flex",
     alignItems: "center",
@@ -848,8 +792,9 @@ const styles = {
   quickIcon: {
     width: "44px",
     height: "44px",
-    borderRadius: "14px",
-    background: "rgba(124, 58, 237, 0.18)",
+    borderRadius: "15px",
+    background: colors.softBg2,
+    color: colors.primaryText,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -863,87 +808,71 @@ const styles = {
     gap: "10px",
   },
 
-  categoryPill: {
-    background: "rgba(15, 23, 42, 0.9)",
-    border: "1px solid rgba(148, 163, 184, 0.18)",
-    borderRadius: "999px",
-    padding: "10px 13px",
-    color: "#e5e7eb",
-    textDecoration: "none",
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "8px",
-    fontSize: "14px",
-    fontWeight: "750",
-  },
-
   activityList: {
     display: "grid",
     gap: "10px",
   },
 
   activityItem: {
-    background: "rgba(15, 23, 42, 0.8)",
-    border: "1px solid rgba(148, 163, 184, 0.14)",
-    borderRadius: "14px",
+    background: colors.softBg,
+    border: `1px solid ${colors.border}`,
+    borderRadius: "16px",
     padding: "13px 14px",
     display: "flex",
     justifyContent: "space-between",
     gap: "14px",
-    color: "#f9fafb",
+    color: colors.textDark,
     textDecoration: "none",
     fontSize: "14px",
-    fontWeight: "700",
+    fontWeight: "750",
   },
 
   activityStatus: {
-    color: "#94a3b8",
+    color: colors.textMuted,
     fontWeight: "750",
     whiteSpace: "nowrap",
   },
 
   emptyText: {
-    color: "#94a3b8",
+    color: colors.textMuted,
     fontSize: "14px",
     margin: 0,
     lineHeight: "1.6",
   },
 
   aiPanel: {
-    background:
-      "radial-gradient(circle at top left, rgba(124, 58, 237, 0.28), transparent 34%), #111827",
-    border: "1px solid rgba(148, 163, 184, 0.18)",
-    borderRadius: "24px",
+    background: "linear-gradient(135deg, #ffffff 0%, #dcfce7 100%)",
+    border: `1px solid ${colors.border}`,
+    borderRadius: "26px",
     padding: "26px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     gap: "20px",
-    boxShadow: "0 16px 40px rgba(0, 0, 0, 0.16)",
+    boxShadow: "0 14px 35px rgba(21, 128, 61, 0.06)",
   },
 
-  aiTitle: {
+  aiPanelLabel: {
+    margin: "0 0 8px 0",
+    color: colors.primary,
+    fontSize: "13px",
+    fontWeight: "900",
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+  },
+
+  aiPanelTitle: {
     margin: "0 0 8px 0",
     fontSize: "28px",
     fontWeight: "900",
     letterSpacing: "-0.05em",
+    color: colors.textDark,
   },
 
-  aiText: {
+  aiPanelText: {
     margin: 0,
     maxWidth: "720px",
-    color: "#cbd5e1",
+    color: colors.textMuted,
     lineHeight: "1.65",
-  },
-
-  aiButton: {
-    background: "#7c3aed",
-    color: "#ffffff",
-    padding: "13px 18px",
-    borderRadius: "14px",
-    textDecoration: "none",
-    fontSize: "14px",
-    fontWeight: "850",
-    whiteSpace: "nowrap",
   },
 };

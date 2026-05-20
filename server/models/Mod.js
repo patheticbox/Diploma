@@ -176,12 +176,18 @@ const modSchema = new mongoose.Schema(
   }
 );
 
-modSchema.index({
-  title: 'text',
-  titleUa: 'text',
-  description: 'text',
-  shortDescription: 'text',
-  tags: 'text',
-});
+modSchema.index(
+  {
+    title: "text",
+    titleUa: "text",
+    description: "text",
+    shortDescription: "text",
+    tags: "text",
+  },
+  {
+    default_language: "none",
+    language_override: "textLanguage",
+  }
+);
 
 module.exports = mongoose.model('Mod', modSchema);

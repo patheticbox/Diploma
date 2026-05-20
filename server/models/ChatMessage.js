@@ -35,8 +35,6 @@ const chatMessageSchema = new mongoose.Schema(
         "compare_mods",
         "general_question",
         "unknown",
-
-        // Нові intent-и для проєкту модів
         "general",
         "general_recommendation",
         "graphics_mods",
@@ -50,5 +48,7 @@ const chatMessageSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+chatMessageSchema.index({ user: 1, createdAt: -1 });
 
 module.exports = mongoose.model("ChatMessage", chatMessageSchema);
